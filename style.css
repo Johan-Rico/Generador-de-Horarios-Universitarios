@@ -278,6 +278,20 @@ input:focus, select:focus, textarea:focus{
   font-size: 0.78rem;
   color: var(--ink-soft);
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.opcion-clase-profesor{
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+}
+.opcion-clase-horario{
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
 }
 .opcion-actions{ margin-top:6px; display:flex; gap:8px; }
 .opcion-actions .btn{ padding: 4px 10px; font-size: 0.75rem; }

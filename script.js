@@ -70,8 +70,11 @@ function contrastText(hex) {
 function formatClase(clase) {
   const dias = clase.dias.map(d => DIAS_CORTO[d]).join(', ');
   const finMin = timeToMin(clase.horaInicio) + clase.duracion;
-  const base = `${dias}  ${formatAMPM(clase.horaInicio)} – ${formatAMPM(finMin)}`;
-  return clase.profesor ? `${base} — ${escapeHtml(clase.profesor)}` : base;
+  const horario = `${dias}  ${formatAMPM(clase.horaInicio)} – ${formatAMPM(finMin)}`;
+  if (clase.profesor) {
+    return `<span class="opcion-clase-profesor">${escapeHtml(clase.profesor)}</span><span class="opcion-clase-horario">${horario}</span>`;
+  }
+  return `<span class="opcion-clase-horario">${horario}</span>`;
 }
 
 function escapeHtml(str) {
