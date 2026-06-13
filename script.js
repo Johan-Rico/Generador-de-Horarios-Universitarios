@@ -36,10 +36,15 @@ function timeToMin(t) {
   return h * 60 + m;
 }
 
-function minToTime(min) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+// Convierte minutos totales o "HH:MM" (24h) a formato 12h con am/pm
+function formatAMPM(value) {
+  const totalMin = typeof value === 'number' ? value : timeToMin(value);
+  let h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  const periodo = h < 12 ? 'a.m.' : 'p.m.';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${String(m).padStart(2, '0')} ${periodo}`;
 }
 
 function colorForIndex(i) {
@@ -56,8 +61,8 @@ function contrastText(hex) {
 
 function formatClase(clase) {
   const dias = clase.dias.map(d => DIAS_CORTO[d]).join(', ');
-  const fin = minToTime(timeToMin(clase.horaInicio) + clase.duracion);
-  return `${dias}  ${clase.horaInicio}–${fin}`;
+  const finMin = timeToMin(clase.horaInicio) + clase.duracion;
+  return `${dias}  ${formatAMPM(clase.horaInicio)} – ${formatAMPM(finMin)}`;
 }
 
 function escapeHtml(str) {
@@ -299,6 +304,11 @@ formOpcion.addEventListener('submit', e => {
     }
     if (!hora) {
       alert('Cada clase debe tener una hora de inicio.');
+      return;
+    }
+    const minutoInicio = timeToMin(hora) % 60;
+    if (minutoInicio !== 0 && minutoInicio !== 30) {
+      alert('La hora de inicio solo puede ser en punto (:00) o y media (:30).');
       return;
     }
     if (!duracion || duracion <= 0 || duracion % 30 !== 0) {
@@ -646,7 +656,7 @@ function buildScheduleTable(combo) {
   html += '</tr></thead><tbody>';
 
   for (let fila = 0; fila < totalFilas; fila++) {
-    html += `<tr><td class="celda-hora">${minToTime(minMin + fila * 30)}</td>`;
+    html += `<tr><td class="celda-hora">${formatAMPM(minMin + fila * 30)}</td>`;
     for (let d = 0; d < DIAS.length; d++) {
       const cell = grid[fila][d];
       if (cell === 'ocupada') continue; // celda cubierta por rowspan anterior
