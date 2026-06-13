@@ -693,7 +693,7 @@ function buildScheduleTable(combo) {
   for (let fila = 0; fila < totalFilas; fila++) {
     const filaInicioMin = minMin + fila * 30;
     const filaFinMin = filaInicioMin + 30;
-    html += `<tr><td class="celda-hora">${formatAMPM(filaInicioMin)} - ${formatAMPM(filaFinMin)}</td>`;
+    html += `<tr><td class="celda-hora">${formatAMPM(filaInicioMin)}</td>`;
     for (let d = 0; d < DIAS.length; d++) {
       const cell = grid[fila][d];
       if (cell === 'ocupada') continue; // celda cubierta por rowspan anterior
