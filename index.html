@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificador de Horarios — Universidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header">
+    <div class="title-block">
+      <span class="eyebrow">Semestre · Planificación</span>
+      <h1>Planificador de Horarios</h1>
+    </div>
+    <div class="header-actions">
+      <button id="btnExport" class="btn btn-ghost" title="Descargar tus materias como archivo .json">Exportar JSON</button>
+      <label class="btn btn-ghost" title="Cargar materias desde un archivo .json">
+        Importar JSON
+        <input type="file" id="inputImport" accept="application/json" hidden>
+      </label>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="materias" role="tab" aria-selected="true">01 · Materias</button>
+    <button class="tab" data-tab="horarios" role="tab" aria-selected="false">02 · Horarios posibles</button>
+  </nav>
+
+  <!-- ===================== TAB: MATERIAS ===================== -->
+  <section id="tab-materias" class="tab-panel active">
+
+    <div class="panel card">
+      <h2>Añadir materia</h2>
+      <form id="formMateria" class="inline-form">
+        <div class="field">
+          <label for="materiaNombre">Nombre</label>
+          <input type="text" id="materiaNombre" placeholder="p. ej. Cálculo III" required>
+        </div>
+        <div class="field field-small">
+          <label for="materiaCodigo">Código <span class="optional">(opcional)</span></label>
+          <input type="text" id="materiaCodigo" placeholder="p. ej. MAT-301">
+        </div>
+        <button type="submit" class="btn btn-primary">Añadir materia</button>
+      </form>
+    </div>
+
+    <div id="materiasList" class="materias-list">
+      <!-- materia cards injected here -->
+    </div>
+
+    <p id="emptyMaterias" class="empty-hint hidden">
+      Todavía no has añadido materias. Usa el formulario de arriba para crear la primera —
+      luego añade sus opciones de horario (profesor, días y duración de cada clase).
+    </p>
+
+  </section>
+
+  <!-- ===================== TAB: HORARIOS ===================== -->
+  <section id="tab-horarios" class="tab-panel">
+
+    <div class="horarios-layout">
+
+      <aside class="panel card sidebar">
+        <h2>Materias a incluir</h2>
+        <div id="seleccionMaterias" class="seleccion-materias">
+          <!-- checkboxes injected -->
+        </div>
+
+        <h2>Filtros</h2>
+        <div class="field">
+          <label for="filtroDesde">No empezar antes de</label>
+          <input type="time" id="filtroDesde" step="1800">
+        </div>
+        <div class="field">
+          <label for="filtroHasta">Salir / terminar antes de</label>
+          <input type="time" id="filtroHasta" step="1800">
+        </div>
+        <div class="field">
+          <label for="filtroPreferidos">Profesores preferidos <span class="optional">(separa con comas)</span></label>
+          <input type="text" id="filtroPreferidos" placeholder="p. ej. Ana Gómez, Luis Rey">
+        </div>
+        <div class="field">
+          <label for="filtroEvitar">Profesores a evitar <span class="optional">(separa con comas)</span></label>
+          <input type="text" id="filtroEvitar" placeholder="p. ej. Carlos Ruiz">
+        </div>
+
+        <button id="btnGenerar" class="btn btn-primary btn-full">Generar horarios</button>
+        <p id="resultadoInfo" class="result-info"></p>
+      </aside>
+
+      <div class="resultado">
+        <div class="resultado-nav">
+          <button id="btnPrev" class="btn btn-ghost" disabled>← Anterior</button>
+          <span id="contadorHorarios" class="contador">—</span>
+          <button id="btnNext" class="btn btn-ghost" disabled>Siguiente →</button>
+        </div>
+        <div id="gridHorario" class="grid-wrap">
+          <p class="empty-hint">Selecciona materias y pulsa «Generar horarios» para ver las combinaciones posibles.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<!-- ===================== MODAL: AÑADIR / EDITAR OPCIÓN ===================== -->
+<div id="modalOpcion" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalOpcionTitulo">Nueva opción</h2>
+      <button class="btn-close" id="btnCloseModal" aria-label="Cerrar">✕</button>
+    </div>
+    <form id="formOpcion">
+      <div class="field">
+        <label for="opcionProfesor">Profesor <span class="optional">(opcional)</span></label>
+        <input type="text" id="opcionProfesor" placeholder="p. ej. Ana Gómez">
+      </div>
+
+      <div id="clasesContainer" class="clases-container"></div>
+
+      <button type="button" id="btnAddClase" class="btn btn-ghost">+ Añadir clase</button>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btnCancelOpcion">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar opción</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== TEMPLATE: CLASE ROW ===================== -->
+<template id="claseRowTemplate">
+  <div class="clase-row">
+    <div class="dias-check">
+      <span class="dias-label">Días</span>
+      <label class="dia-chip"><input type="checkbox" value="Lun"><span>Lun</span></label>
+      <label class="dia-chip"><input type="checkbox" value="Mar"><span>Mar</span></label>
+      <label class="dia-chip"><input type="checkbox" value="Mie"><span>Mié</span></label>
+      <label class="dia-chip"><input type="checkbox" value="Jue"><span>Jue</span></label>
+      <label class="dia-chip"><input type="checkbox" value="Vie"><span>Vie</span></label>
+    </div>
+    <div class="clase-fields">
+      <div class="field field-small">
+        <label>Hora inicio</label>
+        <input type="time" class="clase-hora" step="1800" required>
+      </div>
+      <div class="field field-small">
+        <label>Duración (min)</label>
+        <input type="number" class="clase-duracion" step="30" min="30" value="60" required>
+      </div>
+      <button type="button" class="btn-remove-clase" title="Eliminar esta clase">✕</button>
+    </div>
+  </div>
+</template>
+
+<script src="script.js"></script>
+</body>
+</html>
