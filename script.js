@@ -70,7 +70,8 @@ function contrastText(hex) {
 function formatClase(clase) {
   const dias = clase.dias.map(d => DIAS_CORTO[d]).join(', ');
   const finMin = timeToMin(clase.horaInicio) + clase.duracion;
-  return `${dias}  ${formatAMPM(clase.horaInicio)} – ${formatAMPM(finMin)}`;
+  const base = `${dias}  ${formatAMPM(clase.horaInicio)} – ${formatAMPM(finMin)}`;
+  return clase.profesor ? `${base} — ${escapeHtml(clase.profesor)}` : base;
 }
 
 function escapeHtml(str) {
@@ -127,9 +128,6 @@ function renderMaterias() {
       opcionesHtml = '<p class="no-opciones">Sin opciones todavía. Añade al menos una para poder usar esta materia en los horarios.</p>';
     } else {
       opcionesHtml = '<div class="opciones-list">' + materia.opciones.map(opcion => {
-        const profesorHtml = opcion.profesor
-          ? `<div class="opcion-profesor">${escapeHtml(opcion.profesor)}</div>`
-          : '<div class="opcion-profesor">(sin profesor asignado)</div>';
         const numeroClaseHtml = opcion.numeroClase
           ? `<div class="opcion-numero">Clase ${escapeHtml(opcion.numeroClase)}</div>`
           : '';
@@ -137,7 +135,6 @@ function renderMaterias() {
         return `
           <div class="opcion-item">
             ${numeroClaseHtml}
-            ${profesorHtml}
             ${clasesHtml}
             <div class="opcion-actions">
               <button class="btn btn-ghost" data-action="edit-opcion" data-opcion-id="${opcion.id}">Editar</button>
@@ -247,13 +244,11 @@ function openOpcionModal(materiaId, opcionId) {
   const materia = materias.find(m => m.id === materiaId);
 
   clasesContainer.innerHTML = '';
-  document.getElementById('opcionProfesor').value = '';
   document.getElementById('opcionNumeroClase').value = '';
 
   if (opcionId) {
     const opcion = materia.opciones.find(o => o.id === opcionId);
     modalOpcionTitulo.textContent = `Editar opción — ${materia.nombre}`;
-    document.getElementById('opcionProfesor').value = opcion.profesor || '';
     document.getElementById('opcionNumeroClase').value = opcion.numeroClase || '';
     opcion.clases.forEach(c => addClaseRow(c));
   } else {
@@ -302,6 +297,7 @@ function addClaseRow(claseData) {
       const cb = row.querySelector(`input[value="${dia}"]`);
       if (cb) cb.checked = true;
     });
+    row.querySelector('.clase-profesor').value = claseData.profesor || '';
     setHoraSelects(row, claseData.horaInicio, 'clase-hora');
     setHoraSelects(row, minToTime(timeToMin(claseData.horaInicio) + claseData.duracion), 'clase-horafin');
   } else {
@@ -330,13 +326,13 @@ modalOpcion.addEventListener('click', e => {
 formOpcion.addEventListener('submit', e => {
   e.preventDefault();
 
-  const profesor = document.getElementById('opcionProfesor').value.trim();
   const numeroClase = document.getElementById('opcionNumeroClase').value.trim();
   const rows = [...clasesContainer.querySelectorAll('.clase-row')];
   const clases = [];
 
   for (const row of rows) {
     const dias = [...row.querySelectorAll('.dia-chip input:checked')].map(cb => cb.value);
+    const profesor = row.querySelector('.clase-profesor').value.trim();
     const horaInicio = getHoraFromSelects(row, 'clase-hora');
     const horaFin = getHoraFromSelects(row, 'clase-horafin');
     const duracion = timeToMin(horaFin) - timeToMin(horaInicio);
@@ -350,20 +346,18 @@ formOpcion.addEventListener('submit', e => {
       return;
     }
 
-    clases.push({ dias, horaInicio, duracion });
+    clases.push({ dias, horaInicio, duracion, profesor: profesor || null });
   }
 
   const materia = materias.find(m => m.id === currentEdit.materiaId);
 
   if (currentEdit.opcionId) {
     const opcion = materia.opciones.find(o => o.id === currentEdit.opcionId);
-    opcion.profesor = profesor || null;
     opcion.numeroClase = numeroClase || null;
     opcion.clases = clases;
   } else {
     materia.opciones.push({
       id: uid('op'),
-      profesor: profesor || null,
       numeroClase: numeroClase || null,
       clases
     });
@@ -507,10 +501,10 @@ function getFiltros() {
 
 function passesHardFilters(combo, filtros) {
   for (const { opcion } of combo) {
-    const profesor = (opcion.profesor || '').trim().toLowerCase();
-    if (profesor && filtros.evitar.has(profesor)) return false;
-
     for (const clase of opcion.clases) {
+      const profesor = (clase.profesor || '').trim().toLowerCase();
+      if (profesor && filtros.evitar.has(profesor)) return false;
+
       const inicio = timeToMin(clase.horaInicio);
       const fin = inicio + clase.duracion;
       if (filtros.desdeMin !== null && inicio < filtros.desdeMin) return false;
@@ -523,8 +517,10 @@ function passesHardFilters(combo, filtros) {
 function scoreCombo(combo, filtros) {
   let score = 0;
   for (const { opcion } of combo) {
-    const profesor = (opcion.profesor || '').trim().toLowerCase();
-    if (profesor && filtros.preferidos.has(profesor)) score++;
+    for (const clase of opcion.clases) {
+      const profesor = (clase.profesor || '').trim().toLowerCase();
+      if (profesor && filtros.preferidos.has(profesor)) score++;
+    }
   }
   return score;
 }
@@ -707,7 +703,7 @@ function buildScheduleTable(combo) {
       const fg = contrastText(bg);
       const codigoHtml = item.materia.codigo ? `<span class="cc-codigo">${escapeHtml(item.materia.codigo)}</span>` : '';
       const numeroHtml = item.opcion.numeroClase ? `<span class="cc-numero">Clase ${escapeHtml(item.opcion.numeroClase)}</span>` : '';
-      const profHtml = item.opcion.profesor ? `<span class="cc-profesor">${escapeHtml(item.opcion.profesor)}</span>` : '';
+      const profHtml = item.clase.profesor ? `<span class="cc-profesor">${escapeHtml(item.clase.profesor)}</span>` : '';
       html += `<td class="celda-clase" rowspan="${span}" style="background:${bg}; color:${fg};">
         <span class="cc-nombre">${escapeHtml(item.materia.nombre)}</span>
         ${codigoHtml}

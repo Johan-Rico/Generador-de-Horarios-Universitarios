@@ -442,6 +442,7 @@ table.horario th.th-hora{ width: 105px; }
   border-radius: 8px;
   padding: 10px;
 }
+.field-profesor{ margin-bottom: 8px; }
 .dias-check{
   display:flex;
   align-items:center;

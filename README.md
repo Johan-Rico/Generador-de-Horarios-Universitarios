@@ -11,12 +11,12 @@ combinaciones de horario que no tengan choques.
    - Añade una materia con su nombre y, si quieres, un código.
    - En cada materia, pulsa **"+ Añadir opción"** para registrar una forma
      posible de cursarla:
-     - Profesor (opcional).
+     - Número de clase (opcional, p. ej. 7593) — identifica el grupo/NRC.
      - Una o varias "clases": cada clase tiene sus días (lunes a viernes),
-       hora de inicio (selector en formato 12h am/pm, solo en punto o y
-       media) y duración en minutos (múltiplos de 30). Útil cuando,
-       por ejemplo, la materia se ve lunes/miércoles a una hora y viernes a
-       otra distinta.
+       una hora de inicio y una hora de fin (selectores en formato 12h
+       am/pm, solo en punto o y media), y su propio profesor (opcional).
+       Útil cuando, por ejemplo, la materia se ve lunes/miércoles con un
+       profesor y viernes con otro, o en horarios distintos.
    - Puedes editar o eliminar materias y opciones cuando quieras.
 3. **Pestaña "02 · Horarios posibles"**
    - Marca las materias que quieres incluir (solo aparecen seleccionables
