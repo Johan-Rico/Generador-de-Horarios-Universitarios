@@ -36,6 +36,14 @@ function timeToMin(t) {
   return h * 60 + m;
 }
 
+// Convierte minutos totales (0-1439) a "HH:MM" en formato 24h
+function minToTime(min) {
+  const totalMin = ((min % 1440) + 1440) % 1440;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
 // Convierte minutos totales o "HH:MM" (24h) a formato 12h con am/pm
 function formatAMPM(value) {
   const totalMin = typeof value === 'number' ? value : timeToMin(value);
@@ -122,9 +130,13 @@ function renderMaterias() {
         const profesorHtml = opcion.profesor
           ? `<div class="opcion-profesor">${escapeHtml(opcion.profesor)}</div>`
           : '<div class="opcion-profesor">(sin profesor asignado)</div>';
+        const numeroClaseHtml = opcion.numeroClase
+          ? `<div class="opcion-numero">Clase ${escapeHtml(opcion.numeroClase)}</div>`
+          : '';
         const clasesHtml = opcion.clases.map(c => `<div class="opcion-clase">${formatClase(c)}</div>`).join('');
         return `
           <div class="opcion-item">
+            ${numeroClaseHtml}
             ${profesorHtml}
             ${clasesHtml}
             <div class="opcion-actions">
@@ -236,11 +248,13 @@ function openOpcionModal(materiaId, opcionId) {
 
   clasesContainer.innerHTML = '';
   document.getElementById('opcionProfesor').value = '';
+  document.getElementById('opcionNumeroClase').value = '';
 
   if (opcionId) {
     const opcion = materia.opciones.find(o => o.id === opcionId);
     modalOpcionTitulo.textContent = `Editar opción — ${materia.nombre}`;
     document.getElementById('opcionProfesor').value = opcion.profesor || '';
+    document.getElementById('opcionNumeroClase').value = opcion.numeroClase || '';
     opcion.clases.forEach(c => addClaseRow(c));
   } else {
     modalOpcionTitulo.textContent = `Nueva opción — ${materia.nombre}`;
@@ -255,6 +269,30 @@ function closeOpcionModal() {
   currentEdit = { materiaId: null, opcionId: null };
 }
 
+// Pasa una hora "HH:MM" (24h) a los selects de hora/minuto/am-pm
+// prefijo: 'clase-hora' (inicio) o 'clase-horafin' (fin)
+function setHoraSelects(row, hora, prefijo = 'clase-hora') {
+  const totalMin = timeToMin(hora);
+  let h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  const ampm = h < 12 ? 'am' : 'pm';
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  row.querySelector(`.${prefijo}-h`).value = String(h12);
+  row.querySelector(`.${prefijo}-m`).value = m === 30 ? '30' : '00';
+  row.querySelector(`.${prefijo}-ampm`).value = ampm;
+}
+
+// Lee los selects de hora/minuto/am-pm y devuelve "HH:MM" (24h)
+function getHoraFromSelects(row, prefijo = 'clase-hora') {
+  const h12 = parseInt(row.querySelector(`.${prefijo}-h`).value, 10);
+  const m = row.querySelector(`.${prefijo}-m`).value;
+  const ampm = row.querySelector(`.${prefijo}-ampm`).value;
+  let h24 = h12 % 12;
+  if (ampm === 'pm') h24 += 12;
+  return String(h24).padStart(2, '0') + ':' + m;
+}
+
 function addClaseRow(claseData) {
   const fragment = claseRowTemplate.content.cloneNode(true);
   const row = fragment.querySelector('.clase-row');
@@ -264,8 +302,11 @@ function addClaseRow(claseData) {
       const cb = row.querySelector(`input[value="${dia}"]`);
       if (cb) cb.checked = true;
     });
-    row.querySelector('.clase-hora').value = claseData.horaInicio;
-    row.querySelector('.clase-duracion').value = claseData.duracion;
+    setHoraSelects(row, claseData.horaInicio, 'clase-hora');
+    setHoraSelects(row, minToTime(timeToMin(claseData.horaInicio) + claseData.duracion), 'clase-horafin');
+  } else {
+    setHoraSelects(row, '07:00', 'clase-hora');
+    setHoraSelects(row, '08:00', 'clase-horafin');
   }
 
   row.querySelector('.btn-remove-clase').addEventListener('click', () => {
@@ -290,33 +331,26 @@ formOpcion.addEventListener('submit', e => {
   e.preventDefault();
 
   const profesor = document.getElementById('opcionProfesor').value.trim();
+  const numeroClase = document.getElementById('opcionNumeroClase').value.trim();
   const rows = [...clasesContainer.querySelectorAll('.clase-row')];
   const clases = [];
 
   for (const row of rows) {
     const dias = [...row.querySelectorAll('.dia-chip input:checked')].map(cb => cb.value);
-    const hora = row.querySelector('.clase-hora').value;
-    const duracion = parseInt(row.querySelector('.clase-duracion').value, 10);
+    const horaInicio = getHoraFromSelects(row, 'clase-hora');
+    const horaFin = getHoraFromSelects(row, 'clase-horafin');
+    const duracion = timeToMin(horaFin) - timeToMin(horaInicio);
 
     if (dias.length === 0) {
       alert('Cada clase debe tener al menos un día seleccionado.');
       return;
     }
-    if (!hora) {
-      alert('Cada clase debe tener una hora de inicio.');
-      return;
-    }
-    const minutoInicio = timeToMin(hora) % 60;
-    if (minutoInicio !== 0 && minutoInicio !== 30) {
-      alert('La hora de inicio solo puede ser en punto (:00) o y media (:30).');
-      return;
-    }
-    if (!duracion || duracion <= 0 || duracion % 30 !== 0) {
-      alert('La duración debe ser un múltiplo de 30 minutos (30, 60, 90...).');
+    if (duracion <= 0) {
+      alert('La hora de fin debe ser posterior a la hora de inicio (dentro del mismo día).');
       return;
     }
 
-    clases.push({ dias, horaInicio: hora, duracion });
+    clases.push({ dias, horaInicio, duracion });
   }
 
   const materia = materias.find(m => m.id === currentEdit.materiaId);
@@ -324,11 +358,13 @@ formOpcion.addEventListener('submit', e => {
   if (currentEdit.opcionId) {
     const opcion = materia.opciones.find(o => o.id === currentEdit.opcionId);
     opcion.profesor = profesor || null;
+    opcion.numeroClase = numeroClase || null;
     opcion.clases = clases;
   } else {
     materia.opciones.push({
       id: uid('op'),
       profesor: profesor || null,
+      numeroClase: numeroClase || null,
       clases
     });
   }
@@ -459,7 +495,7 @@ function getFiltros() {
   const preferidosRaw = document.getElementById('filtroPreferidos').value;
   const evitarRaw = document.getElementById('filtroEvitar').value;
 
-  const parseLista = raw => raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const parseLista = raw => raw.split(/[,\n]/).map(s => s.trim().toLowerCase()).filter(Boolean);
 
   return {
     desdeMin: desde ? timeToMin(desde) : null,
@@ -656,7 +692,9 @@ function buildScheduleTable(combo) {
   html += '</tr></thead><tbody>';
 
   for (let fila = 0; fila < totalFilas; fila++) {
-    html += `<tr><td class="celda-hora">${formatAMPM(minMin + fila * 30)}</td>`;
+    const filaInicioMin = minMin + fila * 30;
+    const filaFinMin = filaInicioMin + 30;
+    html += `<tr><td class="celda-hora">${formatAMPM(filaInicioMin)}</td>`;
     for (let d = 0; d < DIAS.length; d++) {
       const cell = grid[fila][d];
       if (cell === 'ocupada') continue; // celda cubierta por rowspan anterior
@@ -668,10 +706,12 @@ function buildScheduleTable(combo) {
       const bg = item.materia.color;
       const fg = contrastText(bg);
       const codigoHtml = item.materia.codigo ? `<span class="cc-codigo">${escapeHtml(item.materia.codigo)}</span>` : '';
+      const numeroHtml = item.opcion.numeroClase ? `<span class="cc-numero">Clase ${escapeHtml(item.opcion.numeroClase)}</span>` : '';
       const profHtml = item.opcion.profesor ? `<span class="cc-profesor">${escapeHtml(item.opcion.profesor)}</span>` : '';
       html += `<td class="celda-clase" rowspan="${span}" style="background:${bg}; color:${fg};">
         <span class="cc-nombre">${escapeHtml(item.materia.nombre)}</span>
         ${codigoHtml}
+        ${numeroHtml}
         ${profHtml}
       </td>`;
     }

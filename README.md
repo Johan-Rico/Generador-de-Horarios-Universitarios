@@ -13,7 +13,8 @@ combinaciones de horario que no tengan choques.
      posible de cursarla:
      - Profesor (opcional).
      - Una o varias "clases": cada clase tiene sus días (lunes a viernes),
-       hora de inicio y duración en minutos (múltiplos de 30). Útil cuando,
+       hora de inicio (selector en formato 12h am/pm, solo en punto o y
+       media) y duración en minutos (múltiplos de 30). Útil cuando,
        por ejemplo, la materia se ve lunes/miércoles a una hora y viernes a
        otra distinta.
    - Puedes editar o eliminar materias y opciones cuando quieras.

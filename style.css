@@ -122,6 +122,7 @@ body{
   flex: 1 1 220px;
 }
 .field-small{ flex: 0 1 160px; }
+.field-hora{ flex: 0 1 230px; }
 .field label{
   font-size: 0.8rem;
   font-weight: 600;
@@ -129,7 +130,7 @@ body{
 }
 .optional{ font-weight: 400; color: var(--ink-faint); font-style: italic; }
 
-input[type="text"], input[type="time"], input[type="number"]{
+input[type="text"], input[type="time"], input[type="number"], select, textarea{
   font-family: var(--font-body);
   font-size: 0.95rem;
   padding: 9px 11px;
@@ -138,10 +139,33 @@ input[type="text"], input[type="time"], input[type="number"]{
   background: var(--paper);
   color: var(--ink);
 }
-input:focus{
+textarea{
+  width: 100%;
+  resize: vertical;
+  min-height: 44px;
+  line-height: 1.4;
+}
+input:focus, select:focus, textarea:focus{
   outline: 2px solid var(--accent2);
   outline-offset: 1px;
   border-color: var(--accent2);
+}
+
+.hora-select{
+  display:flex;
+  align-items:center;
+  gap: 4px;
+}
+.hora-select select{
+  padding: 9px 6px;
+}
+.hora-select .clase-hora-h{ flex: 0 0 56px; }
+.hora-select .clase-hora-m{ flex: 0 0 62px; }
+.hora-select .clase-hora-ampm{ flex: 0 0 70px; }
+.hora-colon{
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 /* ---------- Buttons ---------- */
@@ -230,6 +254,19 @@ input:focus{
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 0.85rem;
+}
+.opcion-numero{
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--grid-line);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-bottom: 4px;
 }
 .opcion-profesor{
   font-weight: 600;
@@ -326,13 +363,14 @@ table.horario th{
   background: var(--ink);
   color: var(--paper);
 }
-table.horario th.th-hora{ width: 78px; }
+table.horario th.th-hora{ width: 105px; }
 .celda-hora{
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   color: var(--ink-soft);
   padding: 4px;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: normal;
   background: repeating-linear-gradient(135deg, rgba(27,43,69,0.025) 0 6px, transparent 6px 12px);
 }
 .celda-vacia{ height: 32px; }
@@ -346,6 +384,7 @@ table.horario th.th-hora{ width: 78px; }
 }
 .celda-clase .cc-nombre{ font-weight: 700; display:block; }
 .celda-clase .cc-codigo{ font-family: var(--font-mono); font-size: 0.68rem; opacity: 0.85; }
+.celda-clase .cc-numero{ font-family: var(--font-mono); font-size: 0.68rem; opacity: 0.85; display:block; }
 .celda-clase .cc-profesor{ font-size: 0.68rem; opacity: 0.85; display:block; }
 
 /* ---------- Modal ---------- */

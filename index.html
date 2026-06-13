@@ -44,7 +44,7 @@
         </div>
         <div class="field field-small">
           <label for="materiaCodigo">Código <span class="optional">(opcional)</span></label>
-          <input type="text" id="materiaCodigo" placeholder="p. ej. MAT-301">
+          <input type="text" id="materiaCodigo" placeholder="p. ej. SI3006">
         </div>
         <button type="submit" class="btn btn-primary">Añadir materia</button>
       </form>
@@ -82,12 +82,12 @@
           <input type="time" id="filtroHasta" step="1800">
         </div>
         <div class="field">
-          <label for="filtroPreferidos">Profesores preferidos <span class="optional">(separa con comas)</span></label>
-          <input type="text" id="filtroPreferidos" placeholder="p. ej. Ana Gómez, Luis Rey">
+          <label for="filtroPreferidos">Profesores preferidos <span class="optional">(uno por línea o separados por coma)</span></label>
+          <textarea id="filtroPreferidos" rows="3" placeholder="Ana Gómez&#10;Luis Rey"></textarea>
         </div>
         <div class="field">
-          <label for="filtroEvitar">Profesores a evitar <span class="optional">(separa con comas)</span></label>
-          <input type="text" id="filtroEvitar" placeholder="p. ej. Carlos Ruiz">
+          <label for="filtroEvitar">Profesores a evitar <span class="optional">(uno por línea o separados por coma)</span></label>
+          <textarea id="filtroEvitar" rows="3" placeholder="Carlos Ruiz"></textarea>
         </div>
 
         <button id="btnGenerar" class="btn btn-primary btn-full">Generar horarios</button>
@@ -123,6 +123,10 @@
         <label for="opcionProfesor">Profesor <span class="optional">(opcional)</span></label>
         <input type="text" id="opcionProfesor" placeholder="p. ej. Ana Gómez">
       </div>
+      <div class="field">
+        <label for="opcionNumeroClase">Número de clase <span class="optional">(opcional)</span></label>
+        <input type="text" id="opcionNumeroClase" placeholder="p. ej. 7593">
+      </div>
 
       <div id="clasesContainer" class="clases-container"></div>
 
@@ -148,13 +152,61 @@
       <label class="dia-chip"><input type="checkbox" value="Vie"><span>Vie</span></label>
     </div>
     <div class="clase-fields">
-      <div class="field field-small">
+      <div class="field field-hora">
         <label>Hora inicio</label>
-        <input type="time" class="clase-hora" step="1800" required>
+        <div class="hora-select">
+          <select class="clase-hora-h">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <span class="hora-colon">:</span>
+          <select class="clase-hora-m">
+            <option value="00">00</option>
+            <option value="30">30</option>
+          </select>
+          <select class="clase-hora-ampm">
+            <option value="am">a.m.</option>
+            <option value="pm">p.m.</option>
+          </select>
+        </div>
       </div>
-      <div class="field field-small">
-        <label>Duración (min)</label>
-        <input type="number" class="clase-duracion" step="30" min="30" value="60" required>
+      <div class="field field-hora">
+        <label>Hora fin</label>
+        <div class="hora-select">
+          <select class="clase-horafin-h">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <span class="hora-colon">:</span>
+          <select class="clase-horafin-m">
+            <option value="00">00</option>
+            <option value="30">30</option>
+          </select>
+          <select class="clase-horafin-ampm">
+            <option value="am">a.m.</option>
+            <option value="pm">p.m.</option>
+          </select>
+        </div>
       </div>
       <button type="button" class="btn-remove-clase" title="Eliminar esta clase">✕</button>
     </div>
